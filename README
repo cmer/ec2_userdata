@@ -1,1 +1,7 @@
 Easily reads from EC2 user data and falls back to a local config file if the code is not running on the EC2 cloud.
+
+This library expects your EC2 user data to be in JSON format. From an EC2 machine, you can then do in Ruby:
+
+EC2::UserData["my-key"]
+
+If your code is not running on EC2, for example, during testing/development, ec2_userdata will try to read ./config/ec2_userdata.yml and return values found in that file instead.
