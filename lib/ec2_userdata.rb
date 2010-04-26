@@ -4,27 +4,27 @@ require 'json/pure'
 module EC2
   class UserData
     def self.[](key)
-      if @user_data.nil?
+      if @userdata.nil?
         if EC2.ec2?
           logger.info "Running on EC2. Reading user data from http://169.254.169.254/1.0/user-data" if logger
-          @user_data = get_ec2_user_data
+          @userdata = get_ec2_userdata
         else
-          logger.info "Not running on EC2. Reading user data from #{app_root}/config/ec2_user_data.yml." if logger
-          @user_data = get_local_user_data
+          logger.info "Not running on EC2. Reading user data from #{app_root}/config/ec2_userdata.yml." if logger
+          @userdata = get_local_userdata
         end
       end
 
-      @user_data[key]
+      @userdata[key]
     end
     
     private
-    def self.get_ec2_user_data
+    def self.get_ec2_userdata
       JSON.parse(Net::HTTP.get(URI.parse("http://169.254.169.254/1.0/user-data")))
     end
     
-    def self.get_local_user_data
+    def self.get_local_userdata
       if app_root
-        YAML.load_file("#{app_root}/config/ec2_user_data.yml")
+        YAML.load_file("#{app_root}/config/ec2_userdata.yml")
       else
         raise "Cannot find app_root. Don't know what to do!"
       end
@@ -68,6 +68,7 @@ module EC2
   end
 end
 
+### Active Support ###
 class String
   def blank?
     self.strip.length == 0

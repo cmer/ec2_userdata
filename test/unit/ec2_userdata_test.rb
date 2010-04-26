@@ -2,20 +2,20 @@ require 'rubygems'
 require 'redgreen'
 require 'test/unit'
 require 'mocha'
-require File.dirname(__FILE__) + '/../../ec2_user_data'
+require File.dirname(__FILE__) + '/../../lib/ec2_userdata'
 
 APP_ROOT = "File.dirname(__FILE__) + '/../.."
 
 class Ec2UserDataTest < Test::Unit::TestCase
   def setup
-    EC2::UserData.class_eval("@user_data = nil")
+    EC2::UserData.class_eval("@userdata = nil")
     EC2::module_eval("@running_on_ec2 = nil")
 
   end
   
   def test_get_on_ec2
     EC2.expects(:ec2?).once.returns(true)
-    Net::HTTP.expects(:get).with(URI.parse("http://169.254.169.254/1.0/user-data")).returns(ec2_json_user_data)
+    Net::HTTP.expects(:get).with(URI.parse("http://169.254.169.254/1.0/user-data")).returns(ec2_json_userdata)
     
     assert_equal "lisa", EC2::UserData["cluster"]
     assert_equal 11300, EC2::UserData["queue_port"]
@@ -23,7 +23,7 @@ class Ec2UserDataTest < Test::Unit::TestCase
   
   def test_get_on_local
     EC2.expects(:ec2?).once.returns(false)
-    YAML.expects(:load_file).with("#{APP_ROOT}/config/ec2_user_data.yml").returns(YAML.load(local_yaml_user_data))
+    YAML.expects(:load_file).with("#{APP_ROOT}/config/ec2_userdata.yml").returns(YAML.load(local_yaml_userdata))
     assert_equal "lisa", EC2::UserData["cluster"]
     assert_equal 11300, EC2::UserData["queue_port"]
   end
@@ -50,11 +50,11 @@ class Ec2UserDataTest < Test::Unit::TestCase
 
 
   ## Helpers ##
-  def ec2_json_user_data
+  def ec2_json_userdata
     '{"queue_host":"lisa-queue.defensio.net","cluster":"lisa","queue_port":11300}'
   end
   
-  def local_yaml_user_data
+  def local_yaml_userdata
     "--- \nqueue_host: lisa-queue.defensio.net\nqueue_port: 11300\ncluster: lisa\n"
   end
   
