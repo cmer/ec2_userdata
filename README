@@ -1,0 +1,1 @@
+Easily reads from EC2 user data and falls back to a local config file if the code is not running on the EC2 cloud.
