@@ -44,7 +44,12 @@ module EC2
     
     def self.app_root
       if defined?(Rails)
-        RAILS_ROOT
+        if Rails.respond_to?(:root)
+          Rails.root
+        else
+          RAILS_ROOT
+        end
+
       elsif defined?(Merb)
         Merb.root
       elsif defined?(APP_ROOT)
