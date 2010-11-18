@@ -48,6 +48,18 @@ class Ec2UserDataTest < Test::Unit::TestCase
     assert_raises(RuntimeError) { EC2.ec2? }
   end
 
+  def test_force_local__when_running_on_ec2
+    EC2::UserData.force_local_userdata = true
+    EC2.expects(:cmd_exec).never
+    assert !(EC2.send :ec2?)
+  end
+
+  def test_force_local_not_set_when_running_on_ec2
+    EC2::UserData.force_local_userdata = nil
+    EC2.expects(:cmd_exec).once.with("which nslookup").returns('/bin/nslookup')
+    EC2.expects(:cmd_exec).once.with("nslookup 169.254.169.254").returns('NXDOMAIN')
+    assert !(EC2.send :ec2?)
+  end
 
   ## Helpers ##
   def ec2_json_userdata
