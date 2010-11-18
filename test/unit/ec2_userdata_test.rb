@@ -9,8 +9,8 @@ APP_ROOT = "File.dirname(__FILE__) + '/../.."
 class Ec2UserDataTest < Test::Unit::TestCase
   def setup
     EC2::UserData.class_eval("@userdata = nil")
+    EC2::UserData.class_eval("@use_local_config = nil")
     EC2::module_eval("@running_on_ec2 = nil")
-
   end
   
   def test_get_on_ec2
@@ -48,26 +48,20 @@ class Ec2UserDataTest < Test::Unit::TestCase
     assert_raises(RuntimeError) { EC2.ec2? }
   end
 
-  def test_force_local__when_running_on_ec2
-    EC2::UserData.force_local_userdata = true
-    EC2.expects(:cmd_exec).never
-    assert !(EC2.send :ec2?)
-  end
-
-  def test_force_local_not_set_when_running_on_ec2
-    EC2::UserData.force_local_userdata = nil
-    EC2.expects(:cmd_exec).once.with("which nslookup").returns('/bin/nslookup')
-    EC2.expects(:cmd_exec).once.with("nslookup 169.254.169.254").returns('NXDOMAIN')
-    assert !(EC2.send :ec2?)
+  def test_use_local_config!
+    EC2::UserData.use_local_config!
+    assert EC2::UserData.use_local_config?
+    EC2::UserData.expects(:get_local_userdata).returns({'foo'=>'bar'})
+    assert_equal 'bar', EC2::UserData['foo']
   end
 
   ## Helpers ##
   def ec2_json_userdata
-    '{"queue_host":"lisa-queue.defensio.net","cluster":"lisa","queue_port":11300}'
+    '{"queue_host":"lisa-queue.example.net","cluster":"lisa","queue_port":11300}'
   end
   
   def local_yaml_userdata
-    "--- \nqueue_host: lisa-queue.defensio.net\nqueue_port: 11300\ncluster: lisa\n"
+    "--- \nqueue_host: lisa-queue.example.net\nqueue_port: 11300\ncluster: lisa\n"
   end
   
   def nslookup_on_ec2

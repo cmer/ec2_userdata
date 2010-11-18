@@ -5,11 +5,11 @@ module EC2
   class UserData
     def self.[](key)
       if @userdata.nil?
-        if EC2.ec2?
+        if EC2.ec2? && !use_local_config?
           logger.info "Running on EC2. Reading user data from http://169.254.169.254/1.0/user-data" if logger
           @userdata = get_ec2_userdata
         else
-          logger.info "Not running on EC2. Reading user data from #{app_root}/config/ec2_userdata.yml." if logger
+          logger.info "Reading user data from #{app_root}/config/ec2_userdata.yml." if logger
           @userdata = get_local_userdata
         end
       end
@@ -17,13 +17,13 @@ module EC2
       @userdata[key]
     end
 
-    # Make ec2_userdata data ignore DNS lookup and just use local data even if on ec2
-    def self.force_local_userdata=(value)
-      @use_local_data = value
+    # Force use of local configuration file even when running on EC2
+    def self.use_local_config!
+      @use_local_config = true
     end
-
-    def self.force_local_userdata
-      @use_local_data
+    
+    def self.use_local_config?
+      @use_local_config == true
     end
     
     private
@@ -71,7 +71,6 @@ module EC2
 
   # Returns true if the current instance is running on the EC2 cloud
   def self.ec2?
-    return false if UserData.force_local_userdata
     return @running_on_ec2 if @running_on_ec2
     raise("nslookup must be in the path") if cmd_exec("which nslookup").blank?
     @running_on_ec2 = (cmd_exec("nslookup 169.254.169.254").match(/NXDOMAIN/) || []).size < 1 
