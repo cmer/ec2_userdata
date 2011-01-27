@@ -1,6 +1,7 @@
 require 'net/http'
 require 'json/pure' unless defined?(JSON)
 require 'yaml' unless defined?(YAML)
+require 'resolv' unless defined?(Resolv)
 
 module EC2
   class UserData
@@ -73,13 +74,14 @@ module EC2
   # Returns true if the current instance is running on the EC2 cloud
   def self.ec2?
     return @running_on_ec2 if defined?(@running_on_ec2)
-    raise("nslookup must be in the path") if cmd_exec("which nslookup").blank?
-    @running_on_ec2 = (cmd_exec("nslookup 169.254.169.254").match(/NXDOMAIN/) || []).size < 1 
-  end
-
-  private
-  def self.cmd_exec(cmd)
-    `#{cmd}`
+    
+    begin
+      @running_on_ec2 = Resolv.getname("169.254.169.254").include?(".ec2.internal")
+    rescue Resolv::ResolvError
+      @running_on_ec2 = false
+    end
+    
+    @running_on_ec2
   end
 end
 
