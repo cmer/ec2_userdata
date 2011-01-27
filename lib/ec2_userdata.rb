@@ -1,29 +1,30 @@
 require 'net/http'
-require 'json/pure'
+require 'json/pure' unless defined?(JSON)
+require 'yaml' unless defined?(YAML)
 
 module EC2
   class UserData
     def self.[](key)
-      if @userdata.nil?
+      unless defined?(@@userdata)
         if EC2.ec2? && !use_local_config?
           logger.info "Running on EC2. Reading user data from http://169.254.169.254/1.0/user-data" if logger
-          @userdata = get_ec2_userdata
+          @@userdata = get_ec2_userdata
         else
           logger.info "Reading user data from #{app_root}/config/ec2_userdata.yml." if logger
-          @userdata = get_local_userdata
+          @@userdata = get_local_userdata
         end
       end
 
-      @userdata[key]
+      @@userdata[key]
     end
 
     # Force use of local configuration file even when running on EC2
     def self.use_local_config!
-      @use_local_config = true
+      @@use_local_config = true
     end
     
     def self.use_local_config?
-      @use_local_config == true
+      @@use_local_config == true
     end
     
     private
@@ -71,9 +72,9 @@ module EC2
 
   # Returns true if the current instance is running on the EC2 cloud
   def self.ec2?
-    return @running_on_ec2 if @running_on_ec2
+    return @@running_on_ec2 if defined?(@@running_on_ec2)
     raise("nslookup must be in the path") if cmd_exec("which nslookup").blank?
-    @running_on_ec2 = (cmd_exec("nslookup 169.254.169.254").match(/NXDOMAIN/) || []).size < 1 
+    @@running_on_ec2 = (cmd_exec("nslookup 169.254.169.254").match(/NXDOMAIN/) || []).size < 1 
   end
 
   private

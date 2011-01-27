@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
   s.name = 'ec2_userdata'
-  s.version = '1.1'
+  s.version = '1.2'
   s.summary = "A simple Ruby library that reads UserData on EC2 with graceful fallback when not running on EC2"
   s.description = %{A simple Ruby library that reads UserData on EC2 with graceful fallback when not running on EC2}
   s.files = Dir['lib/**/*.rb'] + Dir['test/**/*.rb']
