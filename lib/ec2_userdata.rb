@@ -23,16 +23,16 @@ module EC2
     def self.use_local_config!
       @use_local_config = true
     end
-    
+
     def self.use_local_config?
       @use_local_config == true
     end
-    
+
     private
     def self.get_ec2_userdata
       JSON.parse(Net::HTTP.get(URI.parse("http://169.254.169.254/1.0/user-data")))
     end
-    
+
     def self.get_local_userdata
       if app_root
         YAML.load_file("#{app_root}/config/ec2_userdata.yml")
@@ -40,7 +40,7 @@ module EC2
         raise "Cannot find app_root. Don't know what to do!"
       end
     end
-    
+
     def self.logger
       if defined?(Rails)
         Rails.logger
@@ -52,7 +52,7 @@ module EC2
         nil
       end
     end
-    
+
     def self.app_root
       if defined?(Rails)
         if Rails.respond_to?(:root)
@@ -74,24 +74,13 @@ module EC2
   # Returns true if the current instance is running on the EC2 cloud
   def self.ec2?
     return @running_on_ec2 if defined?(@running_on_ec2)
-    
+
     begin
       @running_on_ec2 = Resolv.getname("169.254.169.254").include?(".ec2.internal")
     rescue Resolv::ResolvError
       @running_on_ec2 = false
     end
-    
+
     @running_on_ec2
   end
-end
-
-### Active Support ###
-class String
-  def blank?
-    self.strip.length == 0
-  end
-end
-
-class NilClass
-  def blank?; true; end
 end
